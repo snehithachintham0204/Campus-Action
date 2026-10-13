@@ -35,26 +35,38 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Allow local development and the deployed Vercel frontend
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
-                        "http://localhost:5174"
+                        "http://localhost:5174",
+                        "https://campus-action.vercel.app"
                 )
         );
 
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "PATCH",
-                        "DELETE", "OPTIONS")
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"
+                )
         );
 
         configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type")
+                List.of(
+                        "Authorization",
+                        "Content-Type"
+                )
         );
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
@@ -71,29 +83,46 @@ public class SecurityConfig {
                     )
             )
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**", "/api/hello")
-                    .permitAll()
+
+                    // Public authentication and health-check endpoints
+                    .requestMatchers(
+                            "/api/auth/**",
+                            "/api/hello"
+                    ).permitAll()
 
                     // Only Admins can create, update or delete circulars
-                    .requestMatchers(HttpMethod.POST, "/api/circulars/**")
-                    .hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.PUT, "/api/circulars/**")
-                    .hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.PATCH, "/api/circulars/**")
-                    .hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.DELETE, "/api/circulars/**")
-                    .hasRole("ADMIN")
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/circulars/**"
+                    ).hasRole("ADMIN")
+
+                    .requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/circulars/**"
+                    ).hasRole("ADMIN")
+
+                    .requestMatchers(
+                            HttpMethod.PATCH,
+                            "/api/circulars/**"
+                    ).hasRole("ADMIN")
+
+                    .requestMatchers(
+                            HttpMethod.DELETE,
+                            "/api/circulars/**"
+                    ).hasRole("ADMIN")
 
                     // Students and Admins may read circulars
-                    .requestMatchers(HttpMethod.GET, "/api/circulars/**")
-                    .hasAnyRole("STUDENT", "ADMIN")
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/circulars/**"
+                    ).hasAnyRole("STUDENT", "ADMIN")
+
+                    // Only Admins can access Admin Dashboard APIs
+                    .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
 
                     // All remaining protected endpoints require login
-                  // Only Admins can access Admin Dashboard APIs
-.requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-// All remaining protected endpoints require login
-.anyRequest().authenticated()
+                    .anyRequest().authenticated()
             )
             .addFilterBefore(
                     jwtAuthenticationFilter,
