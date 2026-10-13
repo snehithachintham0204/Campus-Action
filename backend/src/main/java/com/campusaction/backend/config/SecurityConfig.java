@@ -89,7 +89,11 @@ public class SecurityConfig {
                     .hasAnyRole("STUDENT", "ADMIN")
 
                     // All remaining protected endpoints require login
-                    .anyRequest().authenticated()
+                  // Only Admins can access Admin Dashboard APIs
+.requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+// All remaining protected endpoints require login
+.anyRequest().authenticated()
             )
             .addFilterBefore(
                     jwtAuthenticationFilter,

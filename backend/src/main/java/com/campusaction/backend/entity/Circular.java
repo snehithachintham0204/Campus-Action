@@ -19,7 +19,11 @@ public class Circular {
 
     private String targetDepartment;
 
+    // Keep the existing single-year field for compatibility.
     private Integer targetYear;
+
+    // Stores multiple selected years, for example "1,2,3".
+    private String targetYears;
 
     private String requiredAction;
 
@@ -66,6 +70,14 @@ public class Circular {
 
     public void setTargetYear(Integer targetYear) {
         this.targetYear = targetYear;
+    }
+
+    public String getTargetYears() {
+        return targetYears;
+    }
+
+    public void setTargetYears(String targetYears) {
+        this.targetYears = targetYears;
     }
 
     public String getRequiredAction() {

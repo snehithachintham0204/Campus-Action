@@ -898,4 +898,42 @@ p {
   .login-card {
     padding: 25px;
   }
+  
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.admin-table th {
+  background: #f5f3ff;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.admin-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.admin-table td {
+  color: #374151;
+}
+
+.admin-table-wrap + .empty-state {
+  margin-top: 16px;
+}
+
 }
