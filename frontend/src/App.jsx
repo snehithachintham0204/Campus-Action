@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import "./App.css";
 
-const API = "http://localhost:8080/api";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api`;
 
 const readUser = () => {
 
@@ -61,16 +61,11 @@ function App() {
   const [actions, setActions] = useState([]);
 
   const [notifications, setNotifications] = useState([]);
+
   const [adminDashboard, setAdminDashboard] = useState(null);
+
   const [myRegistrations, setMyRegistrations] = useState([]);
-
-  const [manualToken, setManualToken] = useState(
-
-    () => localStorage.getItem("token") || ""
-
-  );
-
-  const [circularForm, setCircularForm] = useState({
+const [circularForm, setCircularForm] = useState({
 
     title: "",
 
@@ -99,8 +94,6 @@ function App() {
     setToken("");
 
     setUser(null);
-
-    setManualToken("");
 
     setCirculars([]);
 
@@ -223,31 +216,53 @@ function App() {
   }, [apiRequest, user]);
 
   const fetchAdminDashboard = useCallback(async () => {
+
     const data = await apiRequest("/admin/dashboard");
+
     setAdminDashboard(data || null);
+
   }, [apiRequest]);
 
   const fetchMyRegistrations = useCallback(async () => {
+
     const data = await apiRequest("/event-registrations/my");
+
     setMyRegistrations(Array.isArray(data) ? data : []);
+
   }, [apiRequest]);
 
   async function handleEventRegister(circularId) {
+
     setError("");
+
     setSuccess("");
+
     setLoading(true);
+
     try {
+
       await apiRequest(`/event-registrations/${circularId}`, { method: "POST" });
+
       setSuccess("You have registered for this event successfully.");
+
       await fetchMyRegistrations();
+
       if (user?.role?.toUpperCase() === "ADMIN") {
+
         await fetchAdminDashboard();
+
       }
+
     } catch (err) {
+
       setError(err.message || "Unable to register for this event.");
+
     } finally {
+
       setLoading(false);
+
     }
+
   }
 
   useEffect(() => {
@@ -283,11 +298,15 @@ function App() {
         }
 
         if (activeTab === "Dashboard" || activeTab === "Circulars") {
+
           await fetchMyRegistrations();
+
         }
 
         if (activeTab === "Admin Dashboard" && user?.role?.toUpperCase() === "ADMIN") {
+
           await fetchAdminDashboard();
+
         }
 
       } catch (err) {
@@ -323,8 +342,11 @@ function App() {
     fetchActions,
 
     fetchNotifications,
+
     fetchAdminDashboard,
+
     fetchMyRegistrations,
+
   ]);
 
   async function handleLogin(event) {
@@ -391,8 +413,6 @@ function App() {
 
       setToken(data.token);
 
-      setManualToken(data.token);
-
       setUser(savedUser);
 
       setActiveTab("Dashboard");
@@ -421,8 +441,6 @@ function App() {
 
     setLoading(true);
 
-
-
     try {
 
       const response = await fetch(`${API}/auth/register`, {
@@ -447,8 +465,6 @@ function App() {
 
       });
 
-
-
       const responseText = await response.text();
 
       let data = null;
@@ -467,8 +483,6 @@ function App() {
 
       }
 
-
-
       if (!response.ok) {
 
         throw new Error(
@@ -480,8 +494,6 @@ function App() {
         );
 
       }
-
-
 
       setEmail(registerForm.email.trim());
 
@@ -518,45 +530,6 @@ function App() {
   }
 
 
-
-  async function saveManualToken(event) {
-
-    event.preventDefault();
-
-    const value = manualToken.trim();
-
-    if (!value) {
-
-      setError("Paste your JWT token first.");
-
-      return;
-
-    }
-
-    localStorage.setItem("token", value);
-
-    setToken(value);
-
-    setError("");
-
-    setSuccess("Token saved. Loading your circulars...");
-
-    setActiveTab("Circulars");
-
-    try {
-
-      await fetchCirculars();
-
-    } catch (err) {
-
-      setError(err.message);
-
-      setSuccess("");
-
-    }
-
-  }
-
   async function createCircular(event) {
 
     event.preventDefault();
@@ -574,8 +547,6 @@ function App() {
         throw new Error("Please select at least one target year.");
 
       }
-
-
 
       const payload = {
 
@@ -690,8 +661,11 @@ function App() {
     { name: "Notifications", icon: "♧" },
 
     { name: "Profile", icon: "♙" },
+
     ...(user?.role?.toUpperCase() === "ADMIN"
+
       ? [{ name: "Admin Dashboard", icon: "▦" }]
+
       : []),
 
   ];
@@ -717,8 +691,6 @@ function App() {
           {error && <div className="alert error">{error}</div>}
 
           {success && <div className="alert success">{success}</div>}
-
-
 
           {showRegister ? (
 
@@ -1199,12 +1171,19 @@ function App() {
                     {circulars.slice(0, 4).map((item) => (
 
                       <CircularCard
+
                         key={item.id}
+
                         item={item}
+
                         canRegister={user?.role?.toUpperCase() === "STUDENT"}
+
                         isRegistered={myRegistrations.some((registration) => registration.eventId === item.id)}
+
                         onRegister={handleEventRegister}
+
                         registering={loading}
+
                       />
 
                     ))}
@@ -1230,44 +1209,6 @@ function App() {
                 subtitle="View announcements and create circulars when permitted."
 
               />
-
-              <form className="panel token-panel" onSubmit={saveManualToken}>
-
-                <h3>JWT connection</h3>
-
-                <p className="muted small-text">
-
-                  Your login token is saved automatically. Use this field only
-
-                  if you need to enter a token manually.
-
-                </p>
-
-                <div className="inline-form">
-
-                  <input
-
-                    type="password"
-
-                    value={manualToken}
-
-                    onChange={(e) => setManualToken(e.target.value)}
-
-                    placeholder="Paste JWT token"
-
-                    aria-label="JWT token"
-
-                  />
-
-                  <button className="secondary-btn" type="submit">
-
-                    Save token
-
-                  </button>
-
-                </div>
-
-              </form>
 
               {user?.role?.toUpperCase() === "ADMIN" && (
 
@@ -1562,12 +1503,19 @@ function App() {
                     {circulars.map((item) => (
 
                       <CircularCard
+
                         key={item.id}
+
                         item={item}
+
                         canRegister={user?.role?.toUpperCase() === "STUDENT"}
+
                         isRegistered={myRegistrations.some((registration) => registration.eventId === item.id)}
+
                         onRegister={handleEventRegister}
+
                         registering={loading}
+
                       />
 
                     ))}
@@ -1755,74 +1703,139 @@ function App() {
           )}
 
           {activeTab === "Admin Dashboard" && user?.role?.toUpperCase() === "ADMIN" && (
+
             <>
+
               <PageHeading
+
                 title="Admin Dashboard"
+
                 subtitle="Monitor student accounts and actual event registrations."
+
               />
+
               <section className="stats-grid">
+
                 <StatCard label="Student Accounts" value={adminDashboard?.totalStudents ?? "—"} icon="♙" color="purple" />
+
                 <StatCard label="Event Registrations" value={adminDashboard?.totalEventRegistrations ?? "—"} icon="✓" color="blue" />
+
                 <StatCard label="Students Registered for Events" value={adminDashboard?.uniqueRegisteredStudents ?? "—"} icon="★" color="green" />
+
               </section>
 
               <section className="panel">
+
                 <div className="panel-heading">
+
                   <div>
+
                     <h2>Event-wise Registrations</h2>
+
                     <p className="muted">Counts include only records in the event registrations table.</p>
+
                   </div>
+
                   <button className="secondary-btn" onClick={() => fetchAdminDashboard().catch((err) => setError(err.message))}>Refresh</button>
+
                 </div>
+
                 {!adminDashboard?.eventCounts?.length ? (
+
                   <EmptyState message="No event registrations yet. Students' account creation alone does not count as event registration." />
+
                 ) : (
+
                   <div className="admin-table-wrap">
+
                     <table className="admin-table">
+
                       <thead><tr><th>Event</th><th>Event ID</th><th>Registrations</th></tr></thead>
+
                       <tbody>
+
                         {adminDashboard.eventCounts.map((event) => (
+
                           <tr key={event.eventId}>
+
                             <td>{event.eventTitle}</td><td>{event.eventId}</td><td>{event.registrationCount}</td>
+
                           </tr>
+
                         ))}
+
                       </tbody>
+
                     </table>
+
                   </div>
+
                 )}
+
               </section>
 
               <section className="panel">
+
                 <div className="panel-heading">
+
                   <div>
+
                     <h2>Registered Students</h2>
+
                     <p className="muted">Each row represents one student's registration for one event.</p>
+
                   </div>
+
                 </div>
+
                 {!adminDashboard?.registrations?.length ? (
+
                   <EmptyState message="No students have registered for events yet." />
+
                 ) : (
+
                   <div className="admin-table-wrap">
+
                     <table className="admin-table">
+
                       <thead><tr><th>Student Name</th><th>Email</th><th>Department</th><th>Year</th><th>Role</th><th>Event</th><th>Registered At</th></tr></thead>
+
                       <tbody>
+
                         {adminDashboard.registrations.map((registration) => (
+
                           <tr key={registration.registrationId}>
+
                             <td>{registration.studentName}</td>
+
                             <td>{registration.email}</td>
+
                             <td>{registration.department || "—"}</td>
+
                             <td>{registration.year ?? "—"}</td>
+
                             <td>{registration.role}</td>
+
                             <td>{registration.eventTitle}</td>
+
                             <td>{registration.registeredAt ? new Date(registration.registeredAt).toLocaleString() : "—"}</td>
+
                           </tr>
+
                         ))}
+
                       </tbody>
+
                     </table>
+
                   </div>
+
                 )}
+
               </section>
+
             </>
+
           )}
 
           {activeTab === "Profile" && (
@@ -2008,15 +2021,25 @@ function CircularCard({ item, canRegister = false, isRegistered = false, onRegis
       )}
 
       {canRegister && String(item.status || "PUBLISHED").toUpperCase() === "PUBLISHED" && (
+
         <button
+
           type="button"
+
           className={isRegistered ? "secondary-btn" : "primary-btn"}
+
           disabled={isRegistered || registering}
+
           onClick={() => onRegister?.(item.id)}
+
         >
+
           {isRegistered ? "Registered" : registering ? "Registering..." : "Register for event"}
+
         </button>
+
       )}
+
     </article>
 
   );
